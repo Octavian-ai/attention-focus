@@ -26,6 +26,7 @@ def input_fn(args, mode):
     d = d.repeat()
     d = d.shuffle(args["batch_size"] * 100)
     d = d.batch(args["batch_size"])
+    #d = d.batch(1)
     d = d.map(parse_single_example(sample))
 
     # --------------------------------------------------------------------------

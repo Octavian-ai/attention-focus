@@ -83,20 +83,23 @@ class Partitioner(object):
 
         if r < self.args["eval_holdback"]:
             mode = "eval"
-            self.eval_query_set.add(query_as_str)
+            logger.warning(query_as_str)
             if query_as_str in self.train_query_set:
                 # Dont add to train because it's in eval
                 logger.warning("Skipping adding record to eval set because it's already in the train set")
                 return
+            else:
+                self.eval_query_set.add(query_as_str)
         elif r < self.args["eval_holdback"] + self.args["predict_holdback"]:
             mode = "predict"
         else:
             mode = "train"
-            self.train_query_set.add(query_as_str)
             if query_as_str in self.eval_query_set:
                 # Dont add to eval because it's in train
                 logger.warning("Skipping adding record to train set because it's already in the eval set")
                 return
+            else:
+                self.train_query_set.add(query_as_str)
 
         key = (str(doc["answer"]), doc["question_type"])
 

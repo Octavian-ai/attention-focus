@@ -6,7 +6,7 @@ import random
 import timeit as t
 from sympy.utilities.iterables import multiset_permutations
 
-VECTOR_LENGTH=12
+VECTOR_LENGTH=10
 mid_point=int(math.floor(VECTOR_LENGTH/2))
 RANGE=2
 low_point=mid_point-RANGE
@@ -28,10 +28,10 @@ def get_bool_permutations():
 ALL_PERMUTATION = get_bool_permutations()
 
 def random_one_hot_vector():
-    return identity_matrix[np.random.choice(VECTOR_LENGTH, 1, replace=False)].tolist()[0]
+    return identity_matrix[np.random.choice(VECTOR_LENGTH, 1, replace=False)][0]
 
 def random_one_hot_set(sz, query):
-    return identity_matrix[np.random.choice(VECTOR_LENGTH, sz, replace=False)].tolist()
+    return identity_matrix[np.random.choice(VECTOR_LENGTH, sz, replace=False)]
 
 
 def query_in_list(list, query):
@@ -66,12 +66,16 @@ print(set_time)
 # Assert data generation is not too slow
 assert set_time < 10
 
-
+ORTHOGONAL = True
 def gen_forever(list_size):
   for i in itertools.count():
-      query = random_permutation_vector()
-      list = random_permutation_set(list_size, query)
-      answer = [1,0] if query_in_list(list, query) else [0,1]
+      if ORTHOGONAL:
+          query = random_one_hot_vector()
+          list = random_one_hot_set(list_size, query)
+      else:
+          query = random_permutation_vector()
+          list = random_permutation_set(list_size, query)
+      answer = [0,1] if query_in_list(list, query) else [1,0]
 
       if i % (2000) == 0:
           print(i)

@@ -27,13 +27,13 @@ logger = logging.getLogger(__name__)
 if __name__ == "__main__":
 
     args = {
-        "balance_batch": 12,
-        "N":1000,
+        "balance_batch": 20,
+        "N":10000,
         "modes":{'train', 'eval'},
         "input_dir": "data",
         "train_input_path": "data/train",
         "eval_input_path": "data/eval",
-        "eval_holdback": 0.1,
+        "eval_holdback": 0.5,
         "predict_holdback": 0,
         "log_level": "DEBUG",
     }
@@ -55,7 +55,7 @@ if __name__ == "__main__":
         with TwoLevelBalancer(lambda d: str(d["answer"]), lambda d: d["question_type"], p,
                               args["balance_batch"]) as balancer:
             for i, doc in enumerate(gen_forever(4)):
-                logger.debug("Generating #: %s", i)
+                logger.debug("Generating #: %s (%s/%s)", i, p.written, args["N"])
                 record = generate_record(args, doc)
                 question_types[doc["question_type"]] += 1
                 output_classes[str(doc["answer"])] += 1

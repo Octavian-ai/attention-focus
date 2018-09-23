@@ -12,7 +12,7 @@ def minimize_clipped(optimizer, value, max_gradient_norm, var=None):
     return op, grad_dict
 
 
-def deeep(tensor, width, depth=2, residual_depth=3, activation=tf.nn.tanh):
+def deeep(tensor, width, depth=2, residual_depth=3, activation=tf.nn.tanh, debug=False):
     """
     Quick 'n' dirty "let's slap on some layers" function.
 
@@ -21,18 +21,16 @@ def deeep(tensor, width, depth=2, residual_depth=3, activation=tf.nn.tanh):
     """
 
     with tf.name_scope("deeep"):
+        tensor = tensor if not debug else tf.Print(tensor, [tensor], message="deep input", summarize=20)
+
         if residual_depth is not None:
             for i in range(math.floor(depth / residual_depth)):
                 tensor_in = tensor
                 for j in range(residual_depth - 1):
                     tensor = tf.layers.dense(tensor, width, activation=activation)
 
-                tensor = tf.layers.dense(tensor, width)
-
                 if tensor_in.shape[-1] == width:
                     tensor += tensor_in
-
-                tensor = activation(tensor)
 
             remaining = depth % residual_depth
 
@@ -42,4 +40,4 @@ def deeep(tensor, width, depth=2, residual_depth=3, activation=tf.nn.tanh):
         for i in range(remaining):
             tensor = tf.layers.dense(tensor, width, activation=activation)
 
-        return tensor
+        return tensor if not debug else tf.Print(tensor, [tensor], message="deep output", summarize=20)
