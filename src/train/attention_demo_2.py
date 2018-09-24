@@ -33,21 +33,22 @@ def train():
         "model_dir": None,
         "warm_start_dir": None,
         "max_gradient_norm": 4.0,
-        "input_dir": "data",
-        "train_input_path": "data/train",
-        "eval_input_path": "data/eval",
+        "input_dir": "experiments",
+        "train_input_path": "experiments/train",
+        "eval_input_path": "experiments/eval",
         "limit": 200000,
         "use_summary_scalar": True,
         "use_lr_finder": True,
         "use_lr_decay": False,
         "learning_rate": 1.5e-04,
+        "use_attention_focus": True,
     }
 
     hooks=None
 
     train_spec = tf.estimator.TrainSpec(
         input_fn=lambda: input_fn(args,"train"),
-        max_steps=args["max_steps"] * 1000 if args["max_steps"] is not None else 200000,
+        max_steps=args["max_steps"] if args["max_steps"] is not None else 200000,
         hooks=hooks)
 
     eval_spec = tf.estimator.EvalSpec(

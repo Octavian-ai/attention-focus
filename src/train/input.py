@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from src.build_data.schema import parse_single_example, reconstitute_single_example
+from src.schema.schema import parse_single_example, reconstitute_single_example
 
 
 def input_fn(args, mode):
@@ -24,7 +24,7 @@ def input_fn(args, mode):
     if args["limit"] is not None:
         d = d.take(args["limit"])
     d = d.repeat()
-    d = d.shuffle(args["batch_size"] * 100)
+    d = d.shuffle(args["batch_size"] * 1000)
     d = d.batch(args["batch_size"])
     #d = d.batch(1)
     d = d.map(parse_single_example(sample))

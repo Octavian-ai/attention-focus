@@ -1,11 +1,9 @@
-import tensorflow as tf
 import pathlib
-from collections import Counter
 
 from .util import *
 from .balancer import TwoLevelBalancer
 from .vectors import gen_forever
-from .schema import generate_record
+from src.schema.schema import generate_record
 
 import logging
 
@@ -30,9 +28,9 @@ if __name__ == "__main__":
         "balance_batch": 20,
         "N":10000,
         "modes":{'train', 'eval'},
-        "input_dir": "data",
-        "train_input_path": "data/train",
-        "eval_input_path": "data/eval",
+        "input_dir": "experiments",
+        "train_input_path": "experiments/train",
+        "eval_input_path": "experiments/eval",
         "eval_holdback": 0.5,
         "predict_holdback": 0,
         "log_level": "DEBUG",

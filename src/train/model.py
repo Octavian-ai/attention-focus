@@ -9,11 +9,11 @@ def attention_fn(question_batch, debug):
                                              shape=[1], dtype=tf.float32)
 
     scale_factor = scale_factor if not debug else tf.Print(scale_factor, [scale_factor], message="scale_factor", summarize=20)
-    #scale_factor = tf.assign(scale_factor, tf.clip_by_value(scale_factor,-5,5,name=None))
 
     return scale_factor * question_batch
 
-def actual_model(question_batch, list_batch, n_output_classes, debug=False):
+
+def actual_model(question_batch, list_batch, n_output_classes, use_focus=False, debug=False):
     with tf.variable_scope("foo", reuse=tf.AUTO_REUSE):
         attn_query = attention_fn(question_batch, debug)
 
@@ -25,12 +25,10 @@ def actual_model(question_batch, list_batch, n_output_classes, debug=False):
 
         attn_output = tf.einsum("jk,jkl -> jl", attn_distribution, list_batch)
 
-        attention_concat = tf.concat([question_batch, attn_output], axis=1)
-        focus = tf.reduce_sum(attn_scores, axis=1, keep_dims=True)
+        focus = tf.reduce_sum(attn_scores, axis=1, keepdims=True)
         focus = focus if not debug else tf.Print(focus, [focus], message="focus", summarize=20)
 
-        # Uncomment this line to enable focus
-        #attention_concat = tf.concat([question_batch, attn_output, focus], axis=1)
+        attention_concat = tf.concat([question_batch, attn_output, focus], axis=1) if use_focus else tf.concat([question_batch, attn_output], axis=1)
 
         attention_concat = attention_concat if not debug else tf.Print(attention_concat, [attention_concat], message="attention_concat", summarize=20)
 
@@ -63,7 +61,13 @@ def model_fn(features, labels, mode, params):
     # --------------------------------------------------------------------------
     print(features)
     debug = mode in {tf.estimator.ModeKeys.EVAL}
-    logits = actual_model(features["query"], features["kb"], n_output_classes=labels.shape[-1], debug=debug)
+    logits = actual_model(
+        features["query"],
+        features["kb"],
+        n_output_classes=labels.shape[-1],
+        use_focus=args["use_attention_focus"],
+        debug=debug
+    )
     logits = logits if not debug else tf.Print(logits, [logits], message="logits", summarize=20 )
 
     # --------------------------------------------------------------------------
@@ -83,7 +87,7 @@ def model_fn(features, labels, mode, params):
 
         if args["use_lr_finder"]:
             learning_rate = tf.train.exponential_decay(
-                1E-06,
+                args["finder_initial_lr"],
                 global_step,
                 decay_steps=1000,
                 decay_rate=1.1
@@ -94,7 +98,7 @@ def model_fn(features, labels, mode, params):
                 args["learning_rate"],
                 global_step,
                 decay_steps=10000,
-                decay_rate=0.9)
+                decay_rate=0.99)
 
         var_all = tf.trainable_variables()
         optimizer = tf.train.AdamOptimizer(learning_rate)

@@ -1,16 +1,89 @@
 import tensorflow as tf
+import logging
+import pathlib
+import math
+from collections import Counter
+from ..build_data import Partitioner, TwoLevelBalancer
+from ..build_data import vectors
+from ..schema import schema
+
 from ..train.input import input_fn
 from ..train.estimator import get_estimator
-from ..args import get_args
+from ..args import get_args, save_args
 
-def train():
-    args=get_args()
+logger = logging.getLogger(__name__)
 
-    hooks=None
+
+def configure_logging(args):
+    logging.basicConfig()
+    logger.setLevel(args["log_level"])
+
+
+def build(args):
+    pathlib.Path(args["input_dir"]).mkdir(parents=True, exist_ok=True)
+
+    vectors.init(args)
+
+    question_types = Counter()
+    output_classes = Counter()
+
+    logger.info("Generate TFRecords")
+    with Partitioner(args) as p:
+        with TwoLevelBalancer(lambda d: str(d["answer"]), lambda d: d["question_type"], p,
+                              args["balance_batch"]) as balancer:
+            for i, doc in enumerate(vectors.gen_forever(args)):
+                logger.debug("Generating #: %s (%s/%s)", i, p.written, args["N"])
+                record = schema.generate_record(args, doc)
+                question_types[doc["question_type"]] += 1
+                output_classes[str(doc["answer"])] += 1
+                balancer.add(doc, record)
+                if p.written >= args["N"]:
+                    break
+
+        logger.info(f"Class distribution: {p.answer_classes}")
+
+        logger.info(f"Wrote {p.written} TFRecords")
+
+
+def find_learning_rate(args):
+    args = dict(args)
+    args.update({
+        "use_lr_finder": True,
+        "use_lr_decay": False,
+        "use_summary_scalar": True,
+        "batch_size": 20,
+        "max_steps": 25000,
+    })
+    i=0
+    learning_rate = args["finder_initial_lr"]
+    main_output_dir=args['output_dir']
+    main_model_dir=args['model_dir']
+    while True:
+        i+=1
+        args.update({
+            "output_dir":main_output_dir+f'finder{i}',
+            "model_dir":main_model_dir+f'finder{i}',
+            "finder_initial_lr": learning_rate
+        })
+        train(args)
+        rerun_q = input("Do you want to re-run the learning rate finder with a new starting rate? (1/0)")
+        print(rerun_q)
+        rerun = bool(int(rerun_q))
+        if rerun:
+            print("Re-running lr finder")
+        else:
+            print("Preparing for train/eval run")
+        learning_rate = float(input("Enter the learning rate you want to use (e.g. 1e-4):"))
+        if not rerun:
+            return learning_rate
+
+def train(args):
+
+    hooks = None
 
     train_spec = tf.estimator.TrainSpec(
-        input_fn=lambda: input_fn(args,"train"),
-        max_steps=args["max_steps"] * 1000 if args["max_steps"] is not None else 200000,
+        input_fn=lambda: input_fn(args, "train"),
+        max_steps=args["max_steps"] if args["max_steps"] is not None else 200000,
         hooks=hooks)
 
     eval_spec = tf.estimator.EvalSpec(
@@ -23,22 +96,14 @@ def train():
     tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
 
 
+if __name__ == "__main__":
+    args = get_args()
 
-# Run a Session
-with tf.Session(graph=graph) as session:
-    output_d = session.run(scores)
-    output_d2 = session.run(scores2)
-    output_softmax = session.run(attention_distribution)
-    output_attention = session.run(attention)
-    output_focus = session.run(focus)
-    output_concat = session.run(attention_concat)
-    print("\nsoftmax input")
-    print(output_d)
-    print(output_softmax)
-    print(output_attention)
-    print(output_focus)
-    print(output_concat)
-    print("\nsoftmax input2")
-    print(output_d2)
+    build(args)
 
-    train()
+    args['learning_rate'] = find_learning_rate(args)
+    args["use_lr_finder"] = False
+    args["use_lr_decay"] = True
+    save_args(args)
+
+    train(args)

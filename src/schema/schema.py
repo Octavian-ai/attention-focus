@@ -2,7 +2,7 @@ import tensorflow as tf
 import pathlib
 from collections import Counter
 
-from .util import *
+from src.build_data.util import *
 
 
 def generate_record(args, doc):
