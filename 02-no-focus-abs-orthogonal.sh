@@ -1,14 +1,23 @@
 #!/usr/bin/env bash
 
 # Add results below and git commit when you have
-# accuracy, Model directory
-# e.g. 98% eeb7a45/model/25633113
+# e.g. git add experiments/eeeb7a45
+#      git commit -m "latest experiment"
 
 pipenv run python -m src.experiments.run \
   --use-attention-focus=False \
-  --max-steps=500000 \
+  --max-steps=300000 \
   --kb-vector-type='orthogonal' \
   --number-of-questions=5000 \
   --kb-vector-length=12 \
   --kb-list-size=2 \
   --attention-output-activation=abs
+
+# RESULTS
+# accuracy, Model directory
+# e.g. 98% eeb7a45/model/25633113
+#
+#
+#
+#
+#

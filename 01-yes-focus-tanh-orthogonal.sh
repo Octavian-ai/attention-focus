@@ -6,12 +6,12 @@
 
 
 pipenv run python -m src.experiments.run \
-  --use-attention-focus=False \
-  --max-steps=3000000 \
+  --use-attention-focus=True \
+  --max-steps=300000 \
   --kb-vector-type='orthogonal' \
-  --number-of-questions=10000 \
+  --number-of-questions=5000 \
   --kb-vector-length=12 \
-  --kb-list-size=2
+  --kb-list-size=2 \
   --attention-output-activation=tanh
 
 # RESULTS
