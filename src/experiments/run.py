@@ -32,12 +32,12 @@ def build(args):
         with TwoLevelBalancer(lambda d: str(d["answer"]), lambda d: d["question_type"], p,
                               args["balance_batch"]) as balancer:
             for i, doc in enumerate(vectors.gen_forever(args)):
-                logger.debug("Generating #: %s (%s/%s)", i, p.written, args["N"])
+                logger.debug("Generating #: %s (%s/%s)", i, p.written, args["number_of_questions"])
                 record = schema.generate_record(args, doc)
                 question_types[doc["question_type"]] += 1
                 output_classes[str(doc["answer"])] += 1
                 balancer.add(doc, record)
-                if p.written >= args["N"]:
+                if p.written >= args["number_of_questions"]:
                     break
 
         logger.info(f"Class distribution: {p.answer_classes}")
@@ -51,8 +51,7 @@ def find_learning_rate(args):
         "use_lr_finder": True,
         "use_lr_decay": False,
         "use_summary_scalar": True,
-        "batch_size": 20,
-        "max_steps": 25000,
+        "max_steps": 20000,
     })
     i=0
     learning_rate = args["finder_initial_lr"]
@@ -67,7 +66,6 @@ def find_learning_rate(args):
         })
         train(args)
         rerun_q = input("Do you want to re-run the learning rate finder with a new starting rate? (1/0)")
-        print(rerun_q)
         rerun = bool(int(rerun_q))
         if rerun:
             print("Re-running lr finder")
@@ -99,6 +97,7 @@ def train(args):
 if __name__ == "__main__":
     args = get_args()
 
+    # TODO: don't regenerate data if it already exists
     build(args)
 
     args['learning_rate'] = find_learning_rate(args)

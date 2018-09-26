@@ -13,7 +13,7 @@ def attention_fn(question_batch, debug):
     return scale_factor * question_batch
 
 
-def actual_model(question_batch, list_batch, n_output_classes, use_focus=False, debug=False):
+def actual_model(question_batch, list_batch, attention_output_activation, n_output_classes, use_focus=False, debug=False):
     with tf.variable_scope("foo", reuse=tf.AUTO_REUSE):
         attn_query = attention_fn(question_batch, debug)
 
@@ -32,7 +32,15 @@ def actual_model(question_batch, list_batch, n_output_classes, use_focus=False, 
 
         attention_concat = attention_concat if not debug else tf.Print(attention_concat, [attention_concat], message="attention_concat", summarize=20)
 
-        magic = deeep(attention_concat, width=question_batch.shape[-1], activation=tf.nn.relu, debug=debug)
+        attention_output_processing_width = 2 * question_batch.shape[-1]
+        attention_output_processed = deeep(
+            attention_concat,
+            width=attention_output_processing_width,
+            activation=attention_output_activation,
+            depth=1, residual_depth=1,
+            debug=debug)
+
+        magic = deeep(attention_output_processed, width=attention_output_processing_width, activation=tf.nn.tanh, debug=debug)
         magic = magic if not debug else tf.Print(magic, [magic], message="magic", summarize=20)
         decision = tf.layers.dense(magic, n_output_classes, activation=tf.nn.sigmoid)
 
@@ -64,6 +72,7 @@ def model_fn(features, labels, mode, params):
     logits = actual_model(
         features["query"],
         features["kb"],
+        args['attention_output_activation_fn'],
         n_output_classes=labels.shape[-1],
         use_focus=args["use_attention_focus"],
         debug=debug
@@ -90,7 +99,7 @@ def model_fn(features, labels, mode, params):
                 args["finder_initial_lr"],
                 global_step,
                 decay_steps=1000,
-                decay_rate=1.1
+                decay_rate=1.15
             )
 
         elif args["use_lr_decay"]:
@@ -98,7 +107,7 @@ def model_fn(features, labels, mode, params):
                 args["learning_rate"],
                 global_step,
                 decay_steps=10000,
-                decay_rate=0.99)
+                decay_rate=0.95)
 
         var_all = tf.trainable_variables()
         optimizer = tf.train.AdamOptimizer(learning_rate)

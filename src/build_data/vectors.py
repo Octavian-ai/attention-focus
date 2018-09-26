@@ -79,7 +79,9 @@ def random_permutation_set(sz, query):
 
 vector_type_fns = {
     "orthogonal_query": random_one_hot_vector,
-    "orthogonal_list": random_one_hot_set
+    "orthogonal_list": random_one_hot_set,
+    "positive_query": random_permutation_vector,
+    "positive_list": random_permutation_set,
 }
 
 
