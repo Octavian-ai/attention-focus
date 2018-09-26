@@ -12,12 +12,12 @@ pipenv run python -m src.experiments.run \
   --number-of-questions=5000 \
   --kb-vector-length=12 \
   --kb-list-size=2 \
-  --attention-output-activation=abs
+  --attention-output-activation=tanh
 
 # RESULTS
 # accuracy, Model directory
 # e.g. 98% eeb7a45/model/25633113
-# 98% 0ef4e94/model/25633163  - might still benefit from more training
+# 98% ffbc02b/model/25633196 might benefit from more training data?
 #
 #
 #
