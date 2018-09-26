@@ -1,4 +1,8 @@
 data/
 results/
-experiments/
+
 .idea/
+experiments/*/*
+!experiments/*/model/
+experiments/*/model/*/*
+!experiments/*/model/*/config.yaml
