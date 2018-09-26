@@ -1,0 +1,2 @@
+all_input_path: ./experiments/eeb7a45/input/all_input.tfrecords
+attention_output_activation:
