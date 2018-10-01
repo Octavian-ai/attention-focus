@@ -10,11 +10,11 @@ def generate_record(args, doc):
     query = doc["query"]
     kb = doc["list"]
     feature = {
-        "query": tf.train.Feature(int64_list=tf.train.Int64List(value=query)),
+        "query": tf.train.Feature(float_list=tf.train.FloatList(value=query)),
         "query_len": int64_feature(len(query)),
-        "kb": tf.train.Feature(int64_list=tf.train.Int64List(value=kb.flatten())),
+        "kb": tf.train.Feature(float_list=tf.train.FloatList(value=kb.flatten())),
         "kb_len": int64_feature(len(kb)),
-        "label": tf.train.Feature(int64_list=tf.train.Int64List(value=label)),
+        "label": tf.train.Feature(float_list=tf.train.FloatList(value=label)),
         "label_length": int64_feature(len(label)),
         "type_string": string_feature(doc["question_type"]),
     }
@@ -27,9 +27,9 @@ def parse_single_example(sample):
     return lambda i: tf.parse_example(
         i,
         features={
-            'query': tf.FixedLenSequenceFeature([], tf.int64, allow_missing=True),
-            'kb': tf.FixedLenSequenceFeature([], tf.int64, allow_missing=True),
-            'label': tf.FixedLenSequenceFeature([], tf.int64, allow_missing=True),
+            'query': tf.FixedLenSequenceFeature([], tf.float32, allow_missing=True),
+            'kb': tf.FixedLenSequenceFeature([], tf.float32, allow_missing=True),
+            'label': tf.FixedLenSequenceFeature([], tf.float32, allow_missing=True),
         })
 
 

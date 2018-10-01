@@ -37,6 +37,7 @@ def get_args(extend=lambda parser: None):
     # --------------------------------------------------------------------------
     default_dir=f"./experiments/{git_hash}"
     timestamp_in_minutes = int(time.time()/60)
+    parser.add_argument('--debug', type=str2bool, default=False)
     parser.add_argument('--log-level', type=str, default='INFO')
     parser.add_argument('--output-dir', type=str, default=f"{default_dir}/output")
     parser.add_argument('--input-dir', type=str, default=f"{default_dir}/input")

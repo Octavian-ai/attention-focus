@@ -1,7 +1,6 @@
 import itertools
 import numpy as np
-import tensorflow as tf
-import math
+from .word2vec import random_croatia_set, random_croatia_vector
 import random
 import timeit as t
 from sympy.utilities.iterables import multiset_permutations
@@ -14,7 +13,7 @@ def init(args):
     vector_length = args["kb_vector_length"]
 
     vector_settings.VECTOR_LENGTH = vector_length
-    vector_settings.identity_matrix = np.eye(vector_length, dtype=np.int64)
+    vector_settings.identity_matrix = np.eye(vector_length, dtype=np.float32)
     vector_settings.ALL_PERMUTATION = get_bool_permutations()
 
     print("example vectors")
@@ -33,7 +32,7 @@ def get_bool_permutations():
     for i in range(vector_settings.VECTOR_LENGTH):
         print(f"calculating permutations for {i}")
         values = np.concatenate(
-            [np.ones(i, dtype=np.int64), np.zeros(vector_settings.VECTOR_LENGTH - i, dtype=np.int64)])
+            [np.ones(i, dtype=np.float32), np.zeros(vector_settings.VECTOR_LENGTH - i, dtype=np.float32)])
         all_permutations.extend(multiset_permutations(values))
     print(f"calculated {len(all_permutations)} permutations")
     print(f"getting on with life")
@@ -82,6 +81,8 @@ vector_type_fns = {
     "orthogonal_list": random_one_hot_set,
     "positive_query": random_permutation_vector,
     "positive_list": random_permutation_set,
+    "croatia_query": random_croatia_vector,
+    "croatia_list": random_croatia_set,
 }
 
 
@@ -100,7 +101,7 @@ def gen_forever(args):
 
         if i % (2000) == 0:
             print(i)
-            print(query)
+            #print(query[0:10])
             print(len(list))
             print(answer)
 

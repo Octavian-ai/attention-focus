@@ -22,7 +22,8 @@ def configure_logging(args):
 def build(args):
     pathlib.Path(args["input_dir"]).mkdir(parents=True, exist_ok=True)
 
-    vectors.init(args)
+    if args["kb_vector_type"] in {'orthogonal', 'positive'}:
+        vectors.init(args)
 
     question_types = Counter()
     output_classes = Counter()

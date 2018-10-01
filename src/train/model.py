@@ -27,10 +27,15 @@ def actual_model(question_batch, list_batch, attention_output_activation, n_outp
 
         focus = tf.reduce_sum(attn_scores, axis=1, keepdims=True)
         focus = focus if not debug else tf.Print(focus, [focus], message="focus", summarize=20)
+        assert focus.shape[-1] == 1
 
-        attention_concat = tf.concat([question_batch, attn_output, focus], axis=1) if use_focus else tf.concat([question_batch, attn_output], axis=1)
+        attn_superposition = tf.reduce_sum(attn_output, axis=0)
+        assert attn_superposition.shape[-1] == question_batch.shape[-1]
 
-        attention_concat = attention_concat if not debug else tf.Print(attention_concat, [attention_concat], message="attention_concat", summarize=20)
+        attention_concat = tf.concat([question_batch, attn_superposition, focus], axis=1) if use_focus else tf.concat(
+            [question_batch, attn_superposition], axis=1)
+        attention_concat = attention_concat if not debug else tf.Print(attention_concat, [attention_concat],
+                                                                       message="attention_concat", summarize=20)
 
         attention_output_processing_width = 2 * question_batch.shape[-1]
         attention_output_processed = deeep(
@@ -68,7 +73,7 @@ def model_fn(features, labels, mode, params):
 
     # --------------------------------------------------------------------------
     print(features)
-    debug = mode in {tf.estimator.ModeKeys.EVAL}
+    debug = args['debug']
     logits = actual_model(
         features["query"],
         features["kb"],
@@ -140,9 +145,10 @@ def model_fn(features, labels, mode, params):
         }
 
         with tf.variable_scope("foo", reuse=tf.AUTO_REUSE):
-            label_class = tf.Print(label_class, [predicted_labels, logits, predicted_class], message="predicted labels", summarize=10)
-            label_class = tf.Print(label_class, [actual_labels, labels, label_class], message="actual labels", summarize=10)
-            #label_class = tf.Print(label_class, [tf.get_variable("attention_scalar")], message="attention_scalar")
+            if debug:
+                label_class = tf.Print(label_class, [predicted_labels, logits, predicted_class], message="predicted labels", summarize=10)
+                label_class = tf.Print(label_class, [actual_labels, labels, label_class], message="actual labels", summarize=10)
+                label_class = tf.Print(label_class, [tf.get_variable("attention_scalar")], message="attention_scalar")
         # For diagnostic visualisation
         predictions.update(features)
 

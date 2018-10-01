@@ -8,16 +8,17 @@
 pipenv run python -m src.experiments.run \
   --use-attention-focus=True \
   --max-steps=300000 \
-  --kb-vector-type='positive' \
-  --number-of-questions=5000 \
-  --kb-vector-length=12 \
-  --kb-list-size=2 \
+  --kb-vector-type='croatia' \
+  --number-of-questions=2000 \
+  --kb-vector-length=300 \
+  --kb-list-size=77 \
   --attention-output-activation=tanh
 
 # RESULTS
 # accuracy, Model directory
 # e.g. 98% eeb7a45/model/25633113
-# 98% ffbc02b/model/25633196 might benefit from more training data?
-# 99.69% 09fc24e/model/25635888/eval
-# 99.69% d44ce0b/model/25640206
+#
+#
+#
+#
 #

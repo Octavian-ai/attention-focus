@@ -2,6 +2,8 @@ import tensorflow as tf
 import random
 from collections import Counter
 
+from .stats import get_stats
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -31,6 +33,9 @@ def int32_feature(value):
 
 def int64_feature(value):
     return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
+
+def float32_feature(value):
+    return tf.train.Feature(int64_list=tf.train.FloatList(value=[value]))
 
 
 def bytes_feature(value):
@@ -83,7 +88,7 @@ class Partitioner(object):
 
         if r < self.args["eval_holdback"]:
             mode = "eval"
-            logger.warning(query_as_str)
+            logger.warning(query_as_str[0:10])
             if query_as_str in self.train_query_set:
                 # Dont add to train because it's in eval
                 logger.warning("Skipping adding record to eval set because it's already in the train set")
