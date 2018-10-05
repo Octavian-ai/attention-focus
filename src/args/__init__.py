@@ -81,11 +81,13 @@ def get_args(extend=lambda parser: None):
 
     parser.add_argument('--use-attention-focus', type=str2bool, default=False)
 
+    parser.add_argument('--score-fn', type=str, default="dot", help="attention score = score_fn(query, list_item). dot|euclidean")
+    parser.add_argument('--focus-fn', type=str, default="reduce_sum", help="Aggregates attention scored. reduce_sum|reduce_max")
     parser.add_argument('--attention-output-activation', type=str, default="tanh")
     #parser.add_argument('--output-layers', type=int, default=2)
 
-    parser.add_argument('--enable-lr-finder', action='store_true', dest="use_lr_finder")
-    parser.add_argument('--enable-lr-decay', action='store_true', dest="use_lr_decay")
+    parser.add_argument('--enable-lr-finder', type=str2bool, default=True, dest="use_lr_finder")
+    parser.add_argument('--enable-lr-decay', type=str2bool, default=True, dest="use_lr_decay")
 
     args = vars(parser.parse_args())
 

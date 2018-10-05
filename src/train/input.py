@@ -16,6 +16,7 @@ def input_fn(args, mode):
         break
         # TODO: consider using this and Dataset form generator to allow better deserialisation
 
+    print("erad sample", sample)
     # --------------------------------------------------------------------------
     # Read TFRecords
     # --------------------------------------------------------------------------

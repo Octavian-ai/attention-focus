@@ -34,7 +34,11 @@ def parse_single_example(sample):
 
 
 def reconstitute_single_example(sample):
+    print(sample)
+    query_len_ = sample["query_len"]
+    kb_len = sample["kb_len"]
+    label_length = sample["label_length"]
     return lambda features: ({
-                'query': tf.reshape(tf.cast(features["query"], tf.float32),[-1,sample["query_len"]]),
-                'kb': tf.reshape(tf.cast(features["kb"], tf.float32),[-1,sample["kb_len"],sample["query_len"]]),
-            }, tf.reshape(tf.cast(features["label"], tf.float32),[-1,sample["label_length"]]))
+                'query': tf.reshape(tf.cast(features["query"], tf.float32), [-1, query_len_]),
+                'kb': tf.reshape(tf.cast(features["kb"], tf.float32), [-1, kb_len, query_len_]),
+            }, tf.reshape(tf.cast(features["label"], tf.float32), [-1, label_length]))

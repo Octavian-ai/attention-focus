@@ -1,5 +1,4 @@
 import tensorflow as tf
-import numpy as np
 
 from .utils import *
 
@@ -12,30 +11,73 @@ def attention_fn(question_batch, debug):
 
     return scale_factor * question_batch
 
+def attention(
+        question_batch,
+        list_batch,
+        attn_query,
+        score="dot",
+        focus_fn="reduce_sum",
+        use_focus=False,
+        debug=False):
+    if score=="dot":
+        attn_scores = tf.einsum("jl,jkl -> jk", attn_query, list_batch)
+    elif score=="euclidean":
+        # I just want to subtract the query from every item but I couldn't get broadcasting to work so I ended up
+        # duplicate the query using concat, this kills performance. I'm sure there is a better way to do this!
+        attn_query = tf.manip.reshape(attn_query,[-1,1,int(attn_query.shape[-1])])
+        spread = attn_query
+        for i in range(int(list_batch.shape[1])-1):
+            spread = tf.concat([spread, attn_query], axis=1)
 
-def actual_model(question_batch, list_batch, attention_output_activation, n_output_classes, use_focus=False, debug=False):
+        # This is 1 - euclidian^2
+        # I don't actually think the 1 is particularly important. I started out trying to arrange this so that it would
+        # always return a value between 1 and -1 i.e. ((1-distance^2)/(distance^2) but this turned out to be faster
+        attn_scores = 1-tf.reduce_sum(tf.square(tf.subtract(list_batch, spread)), axis=-1)
+    else:
+        raise Exception("unknown score fn "+score)
+    attn_scores = attn_scores if not debug else tf.Print(attn_scores, [attn_scores],
+                                                         message="attn_scores", summarize=20)
+
+    attn_distribution = tf.nn.softmax(attn_scores)
+
+    attn_output = tf.einsum("jk,jkl -> jl", attn_distribution, list_batch)
+
+    if focus_fn=="reduce_sum":
+        focus = tf.reduce_sum(attn_scores, axis=1, keepdims=True)
+    elif focus_fn=="reduce_max":
+        focus =  tf.reduce_max(attn_scores,  axis=1, keepdims=True)
+    else:
+        raise Exception("Unknown focus fn" + focus_fn)
+    focus = focus if not debug else tf.Print(focus, [focus], message="focus", summarize=20)
+
+    assert focus.shape[-1] == 1
+    assert attn_output.shape[-1] == question_batch.shape[-1]
+
+    if debug:
+        question_batch = tf.check_numerics(question_batch, "question_batch", name=None)
+        attn_output = tf.check_numerics(attn_output, "attn_output", name=None)
+        question_batch = tf.check_numerics(question_batch, "question_batch", name=None)
+    attention_concat = tf.concat([question_batch, attn_output, focus], axis=1) if use_focus else tf.concat(
+        [question_batch, attn_output], axis=1)
+    attention_concat = attention_concat if not debug else tf.Print(attention_concat, [attention_concat],
+                                                                   message="attention_concat", summarize=20)
+    if use_focus:
+        assert attention_concat.shape[-1] == question_batch.shape[-1] * 2 + 1
+    else:
+        assert attention_concat.shape[-1] == question_batch.shape[-1] * 2
+
+    attention_concat = attention_concat if not debug else tf.check_numerics(attention_concat, "attention_concat", name=None)
+    return attention_concat
+
+def actual_model(question_batch, list_batch, attention_output_activation, n_output_classes, score_fn="dot", focus_fn="reduce_sum", use_focus=False, debug=False):
     with tf.variable_scope("foo", reuse=tf.AUTO_REUSE):
         attn_query = attention_fn(question_batch, debug)
 
-        attn_scores = tf.einsum("jl,jkl -> jk", attn_query, list_batch)
-        attn_scores = attn_scores if not debug else tf.Print(attn_scores, [attn_scores],
-                                                                       message="attn_scores", summarize=20)
-
-        attn_distribution = tf.nn.softmax(attn_scores)
-
-        attn_output = tf.einsum("jk,jkl -> jl", attn_distribution, list_batch)
-
-        focus = tf.reduce_sum(attn_scores, axis=1, keepdims=True)
-        focus = focus if not debug else tf.Print(focus, [focus], message="focus", summarize=20)
-        assert focus.shape[-1] == 1
-
-        attn_superposition = tf.reduce_sum(attn_output, axis=0)
-        assert attn_superposition.shape[-1] == question_batch.shape[-1]
-
-        attention_concat = tf.concat([question_batch, attn_superposition, focus], axis=1) if use_focus else tf.concat(
-            [question_batch, attn_superposition], axis=1)
-        attention_concat = attention_concat if not debug else tf.Print(attention_concat, [attention_concat],
-                                                                       message="attention_concat", summarize=20)
+        attention_concat = attention(question_batch, list_batch, attn_query,
+                                     score=score_fn,
+                                     focus_fn=focus_fn,
+                                     use_focus=use_focus,
+                                     debug=debug)
 
         attention_output_processing_width = 2 * question_batch.shape[-1]
         attention_output_processed = deeep(
@@ -78,6 +120,8 @@ def model_fn(features, labels, mode, params):
         features["query"],
         features["kb"],
         args['attention_output_activation_fn'],
+        score_fn=args["score_fn"],
+        focus_fn=args["focus_fn"],
         n_output_classes=labels.shape[-1],
         use_focus=args["use_attention_focus"],
         debug=debug

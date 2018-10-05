@@ -1,7 +1,6 @@
 import tensorflow as tf
 import logging
 import pathlib
-import math
 from collections import Counter
 from ..build_data import Partitioner, TwoLevelBalancer
 from ..build_data import vectors
@@ -49,7 +48,6 @@ def build(args):
 def find_learning_rate(args):
     args = dict(args)
     args.update({
-        "use_lr_finder": True,
         "use_lr_decay": False,
         "use_summary_scalar": True,
         "max_steps": 20000,
@@ -58,7 +56,7 @@ def find_learning_rate(args):
     learning_rate = args["finder_initial_lr"]
     main_output_dir=args['output_dir']
     main_model_dir=args['model_dir']
-    while True:
+    while True and args["use_lr_finder"]:
         i+=1
         args.update({
             "output_dir":main_output_dir+f'finder{i}',
@@ -74,7 +72,8 @@ def find_learning_rate(args):
             print("Preparing for train/eval run")
         learning_rate = float(input("Enter the learning rate you want to use (e.g. 1e-4):"))
         if not rerun:
-            return learning_rate
+            break
+    return learning_rate
 
 def train(args):
 
