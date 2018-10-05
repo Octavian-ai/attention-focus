@@ -7,8 +7,10 @@
 
 pipenv run python -m src.experiments.run \
   --use-attention-focus=True \
+  --score-fn=euclidean \
+  --focus-fn=reduce_max \
   --max-steps=300000 \
-  --kb-vector-type='orthogonal' \
+  --kb-vector-type='positive' \
   --number-of-questions=5000 \
   --kb-vector-length=12 \
   --kb-list-size=2 \
@@ -16,9 +18,5 @@ pipenv run python -m src.experiments.run \
 
 # RESULTS
 # accuracy, Model directory
-# e.g. 98% eeb7a45/model/25633113
-# 100% fb4a590/model/25637877
-#
-#
-#
+# 100%
 #

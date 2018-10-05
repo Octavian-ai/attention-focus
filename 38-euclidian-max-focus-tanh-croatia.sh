@@ -8,14 +8,16 @@
 pipenv run python -m src.experiments.run \
   --use-attention-focus=True \
   --score-fn=euclidean \
+  --focus-fn=reduce_max \
   --max-steps=300000 \
-  --kb-vector-type='positive' \
-  --number-of-questions=5000 \
-  --kb-vector-length=12 \
-  --kb-list-size=2 \
-  --attention-output-activation=tanh
+  --kb-vector-type='croatia' \
+  --number-of-questions=2000 \
+  --kb-vector-length=300 \
+  --kb-list-size=77 \
+  --attention-output-activation=tanh \
+  --finder-initial-lr=1.1e-5 \
+  --enable-lr-finder=False
 
 # RESULTS
-# accuracy, Model directory
-# e.g. 98% eeb7a45/model/25633113
-#
+# accuracy, Model
+# 100%
