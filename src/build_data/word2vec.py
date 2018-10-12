@@ -93,7 +93,7 @@ class VocabFromNumpyArrays(object):
 
 t_0 = time.time()
 print("loading sentences")
-WORDS, SENTENCES = get_sentences()
+#WORDS, SENTENCES = get_sentences()
 print("loading sentences", time.time() - t_0)
 
 def random_croatia_vector():
