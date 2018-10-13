@@ -20,6 +20,6 @@ pipenv run python -m src.experiments.run \
 # RESULTS
 # accuracy, Model directory
 # 53.13%, f576fef/model/25656415
-#
+# 56.55%, experiments/333880e/model/25657693
 #
 #
