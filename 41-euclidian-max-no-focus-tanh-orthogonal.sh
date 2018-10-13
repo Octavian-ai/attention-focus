@@ -14,11 +14,12 @@ pipenv run python -m src.experiments.run \
   --number-of-questions=5000 \
   --kb-vector-length=12 \
   --kb-list-size=2 \
-  --attention-output-activation=tanh
+  --attention-output-activation=tanh \
+  
 
 # RESULTS
 # accuracy, Model directory
-# 100%
+# 53.13%, f576fef/model/25656415
 #
 #
 #
