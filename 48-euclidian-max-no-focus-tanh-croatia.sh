@@ -20,4 +20,4 @@ pipenv run python -m src.experiments.run \
 
 # RESULTS
 # accuracy, Model
-# 100%
+# 100% 64eea2a/model/25658506
