@@ -1,5 +1,6 @@
 import tensorflow as tf
 import random
+from .once import once
 from collections import Counter
 
 from .stats import get_stats
